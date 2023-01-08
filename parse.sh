@@ -10,12 +10,12 @@ script_start=$(date +%s)
 script_directory=$(dirname "$0")
 
 # ================================
-myFileNames=$(ls *.sh)
+myFileNames=$(ls *.h264)
 for file in $myFileNames
 do
     # Make copies of the file with the appropriate extension
     fileNameWithoutExtension="${file%.*}"
-    ffmpeg -r 30 -i $file -y "$file.mp4"
+    ffmpeg -r 30 -i $file -y "$fileNameWithoutExtension.mp4"
 done
 
 # ================================
