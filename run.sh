@@ -1,7 +1,5 @@
 #!/bin/bash -
 
-# Initializes this project in order to be able to run several of its scripts.
-
 # Exit when any command fails
 set -e
 
@@ -42,7 +40,7 @@ else
 fi
 
 # ================================
-$python_cmd test.py
+$python_cmd test.py && ./parse.sh
 # ================================
 
 echo
