@@ -1,6 +1,8 @@
 import RPi.GPIO as GPIO
 import time
 
+COUNT = 0
+
 
 def main():
     GPIO.setmode(GPIO.BCM)
@@ -15,7 +17,8 @@ def main():
     try:
         while True:
             if GPIO.input(MOTION_SENSOR):
-                print("Motion Detected")
+                COUNT += 1
+                print(f"Motion Detected: {COUNT}")
             time.sleep(0.1)
     except KeyboardInterrupt:
         print(f"Manual exit.")
