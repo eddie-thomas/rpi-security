@@ -40,7 +40,7 @@ else
 fi
 
 # ================================
-$python_cmd test.py && ./parse.sh
+$python_cmd test_motion_sensor.py
 # ================================
 
 echo
