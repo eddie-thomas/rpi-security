@@ -1,12 +1,11 @@
 import RPi.GPIO as GPIO
 import time
 
-COUNT = 0
-
 
 def main():
     GPIO.setmode(GPIO.BCM)
 
+    COUNT = 0
     MOTION_SENSOR = 16
     # Set up the input connector to check for when the motion sensor is tipped off
     GPIO.setup(MOTION_SENSOR, GPIO.IN)
