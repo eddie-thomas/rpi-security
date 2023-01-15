@@ -88,6 +88,9 @@ class CameraSecurity:
                 await asyncio.sleep(1)
         except KeyboardInterrupt:
             print(f"Manual exit.")
+        except BaseException as e:
+            print(e)
+            raise e
         finally:
             print("GPIO cleanup")
             # this ensures a clean exit
@@ -116,8 +119,9 @@ class CameraSecurity:
                 # with motion and another video being created
                 if self.MOTION.DETECTED:
                     if not self.camera:
+                        print("create camera")
                         await self._start_camera()
-                    print("camera active")
+                    print("camera active - motion")
                     self.camera.wait_recording(1)
                 else:
                     if self.camera:
