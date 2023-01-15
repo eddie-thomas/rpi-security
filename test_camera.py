@@ -5,7 +5,7 @@ import picamera
 
 def motion_detected(length):
     # Randomly return True (like a fake motion detection routine)
-    return True if length < 9e20 else False
+    return True if length < 3e5 else False
 
 
 def record_when_motion_detected():
@@ -23,7 +23,7 @@ def record_when_motion_detected():
                 camera.wait_recording(1)
                 print(f"\nwaited for {length} seconds")
                 length += 1
-
+            else:
                 break
     except KeyboardInterrupt:
         print(f"Manual exit.")
