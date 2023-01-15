@@ -70,6 +70,7 @@ class CameraSecurity:
             while True:
                 # If sensor is tripped
                 if GPIO.input(self.MOTION.SENSOR):
+                    print("motion detected")
                     # If we haven't been tripped and this is a new motion
                     if self.MOTION.DETECTED == False:
                         # Append new motion
@@ -82,7 +83,7 @@ class CameraSecurity:
                     # Now always check if we can end a motion when we are not triggering
                     self._end_motion()
 
-                await asyncio.sleep(0)
+                await asyncio.sleep(1)
         except KeyboardInterrupt:
             print(f"Manual exit.")
         finally:
@@ -113,14 +114,15 @@ class CameraSecurity:
                 if self.MOTION.DETECTED:
                     if not self.camera:
                         await self._start_camera()
-                    self.camera.wait_recording(0)
+                    print("camera active")
+                    self.camera.wait_recording(1)
                 else:
                     if self.camera:
                         self.camera.stop_recording()
                         self.CAMERA.STOPPED = True
                         break
 
-                await asyncio.sleep(0)
+                await asyncio.sleep(1)
         except KeyboardInterrupt:
             print(f"Manual exit.")
         finally:
