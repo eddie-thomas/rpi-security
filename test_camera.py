@@ -33,7 +33,7 @@ def record_when_motion_detected():
     except KeyboardInterrupt:
         print(f"Manual exit.")
     finally:
-        stream.copy_to("motion.h264")
+        # stream.copy_to("motion.h264")
         camera.stop_recording()
 
 
