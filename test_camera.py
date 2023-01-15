@@ -21,7 +21,7 @@ def record_when_motion_detected():
             if motion_detected():
                 # Keep recording for 10 seconds and only then write the
                 # stream to disk
-                camera.wait_recording(10000000000000)
+                camera.wait_recording(86e3)
                 # camera.resolution = (800, 600)
                 # camera.start_preview()
                 # camera.start_recording('foo.h264')
