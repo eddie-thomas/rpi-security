@@ -80,8 +80,9 @@ class CameraSecurity:
                         self.MOTION.CURRENT = datetime.now()
 
                 else:
-                    # Now always check if we can end a motion when we are not triggering
-                    self._end_motion()
+                    if self.MOTION.DETECTED:
+                        # Now always check if we can end a motion when we are not triggering
+                        self._end_motion()
 
                 await asyncio.sleep(1)
         except KeyboardInterrupt:
