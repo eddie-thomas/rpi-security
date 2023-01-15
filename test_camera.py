@@ -12,13 +12,10 @@ def record_when_motion_detected():
     camera = picamera.PiCamera()
     # Set Camera resolution accordingly
     camera.resolution = "HD"
-
-    stream = picamera.PiCameraCircularIO(camera, seconds=10)
-    camera.start_recording(stream, format="h264")
+    camera.start_recording("motion.h264")
     try:
         length = 0
         while True:
-            camera.wait_recording(5)
             if motion_detected(length):
                 camera.wait_recording(1)
                 print(f"\nwaited for {length} seconds")
@@ -28,7 +25,7 @@ def record_when_motion_detected():
     except KeyboardInterrupt:
         print(f"Manual exit.")
     finally:
-        stream.copy_to("motion.h264")
+        # stream.copy_to("motion.h264")
         camera.stop_recording()
 
 
