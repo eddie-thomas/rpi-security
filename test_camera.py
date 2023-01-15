@@ -21,6 +21,7 @@ def record_when_motion_detected():
             camera.wait_recording(1)
             if motion_detected(length):
                 camera.wait_recording(1)
+                print(f"\nwaited for {length} seconds")
                 length += 1
 
                 break
