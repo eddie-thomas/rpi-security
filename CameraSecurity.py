@@ -87,6 +87,7 @@ class CameraSecurity:
         except KeyboardInterrupt:
             print(f"Manual exit.")
         finally:
+            print("GPIO cleanup")
             # this ensures a clean exit
             GPIO.cleanup()
 
@@ -126,6 +127,7 @@ class CameraSecurity:
         except KeyboardInterrupt:
             print(f"Manual exit.")
         finally:
+            print("Camera killed")
             self._kill_camera()
             # Recursively call it again
             await self._record_motion()
