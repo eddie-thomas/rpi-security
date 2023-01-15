@@ -5,7 +5,7 @@ import picamera
 
 def motion_detected(length):
     # Randomly return True (like a fake motion detection routine)
-    return True if length < 30 else False
+    return True if length < 10 else False
 
 
 def record_when_motion_detected():
