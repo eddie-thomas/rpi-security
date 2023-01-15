@@ -3,9 +3,9 @@ import random
 import picamera
 
 
-def motion_detected():
+def motion_detected(length):
     # Randomly return True (like a fake motion detection routine)
-    return True
+    return True if length < 30 else False
 
 
 def record_when_motion_detected():
@@ -13,27 +13,21 @@ def record_when_motion_detected():
     # Set Camera resolution accordingly
     camera.resolution = "HD"
 
-    camera.start_recording("motion.h264")
+    stream = picamera.PiCameraCircularIO(camera, seconds=3)
+    camera.start_recording(stream, format="h264")
     try:
+        length = 0
         while True:
             camera.wait_recording(1)
-            if motion_detected():
-                # Keep recording for 10 seconds and only then write the
-                # stream to disk
-                camera.wait_recording(86e3)
-                # camera.resolution = (800, 600)
-                # camera.start_preview()
-                # camera.start_recording('foo.h264')
-                # camera.wait_recording(10)
-                # camera.capture('foo.jpg', use_video_port=True)
-                # camera.wait_recording(10)
-                # camera.stop_recording()
+            if motion_detected(length):
+                camera.wait_recording(1)
+                length += 1
 
                 break
     except KeyboardInterrupt:
         print(f"Manual exit.")
     finally:
-        # stream.copy_to("motion.h264")
+        stream.copy_to("motion.h264")
         camera.stop_recording()
 
 
