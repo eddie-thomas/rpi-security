@@ -131,6 +131,7 @@ class CameraSecurity:
                         print("no motion - yes camera")
                         self.camera.stop_recording()
                         self.CAMERA.STOPPED = True
+                        # Add the task of writing video file to an `.mp4` file
                         asyncio.create_task(self._write_motion_to_file())
                         break
                     print("no motion - no camera")
@@ -160,6 +161,7 @@ class CameraSecurity:
 
     async def _write_motion_to_file(self):
         print("starting to write h264 file to mp4")
+        # Change to `parse.sh` and then put pictures in the appropriate directory
         Popen(["./scripts/test.sh"])
 
 
