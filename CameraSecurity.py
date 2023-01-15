@@ -4,6 +4,8 @@ import RPi.GPIO as GPIO
 
 from datetime import datetime, timedelta
 
+from subprocess import Popen
+
 
 class CameraSecurity:
     """Security system built with a DORHEA Camera Module w/ night-vision compatibility, and an HC-SR501 PIR Sensor module
@@ -83,7 +85,7 @@ class CameraSecurity:
                     print("no motion detected")
                     if self.MOTION.DETECTED:
                         # Now always check if we can end a motion when we are not triggering
-                        self._end_motion()
+                        self._kill_motion()
 
                 await asyncio.sleep(1)
         except KeyboardInterrupt:
@@ -96,18 +98,18 @@ class CameraSecurity:
             # this ensures a clean exit
             GPIO.cleanup()
 
-    def _end_motion(self):
+    def _kill_camera(self):
+        if self.camera:
+            self.camera.close()
+            self.camera = None
+
+    def _kill_motion(self):
         # Check if we are 15 seconds ahead of our motion's current
         delta = datetime.now() - self.MOTION.CURRENT
         if self.MOTION.DETECTED == True and delta > self.MOTION_END_TIME_LAPSE:
             print("kill motion")
             # Set motion detected to false
             self.MOTION.DETECTED = False
-
-    def _kill_camera(self):
-        if self.camera:
-            self.camera.close()
-            self.camera = None
 
     def _main(self):
         asyncio.run(self._run())
@@ -129,6 +131,7 @@ class CameraSecurity:
                         print("no motion - yes camera")
                         self.camera.stop_recording()
                         self.CAMERA.STOPPED = True
+                        asyncio.create_task()
                         break
                     print("no motion - no camera")
 
@@ -154,6 +157,10 @@ class CameraSecurity:
         await asyncio.sleep(1)
 
         self.camera.start_recording(f"motion_{self.MOTION.COUNT}.h264")
+
+    async def _write_motion_to_file(self):
+        print("starting to write h264 file to mp4")
+        Popen(["./scripts/test.sh"])
 
 
 class DotDict(dict):
