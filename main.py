@@ -1,4 +1,4 @@
 import CameraSecurity
 
 if __name__ == "__main__":
-    CameraSecurity(23)
+    SECURITY_SYSTEM = CameraSecurity(23)
