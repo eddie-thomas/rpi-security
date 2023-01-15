@@ -13,8 +13,7 @@ def record_when_motion_detected():
     # Set Camera resolution accordingly
     camera.resolution = "HD"
 
-    stream = picamera.PiCameraCircularIO(camera, seconds=20)
-    camera.start_recording(stream, format="h264")
+    camera.start_recording("motion.h264")
     try:
         while True:
             camera.wait_recording(1)
