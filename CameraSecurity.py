@@ -100,6 +100,7 @@ class CameraSecurity:
         # Check if we are 15 seconds ahead of our motion's current
         delta = datetime.now() - self.MOTION.CURRENT
         if self.MOTION.DETECTED == True and delta > self.MOTION_END_TIME_LAPSE:
+            print("kill motion")
             # Set motion detected to false
             self.MOTION.DETECTED = False
 
