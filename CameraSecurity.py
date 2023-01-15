@@ -31,7 +31,11 @@ class CameraSecurity:
 
         # Camera set-up
         self.camera = None
-
+        self.CAMERA = DotDict(
+            {
+                "STOPPED": True,
+            }
+        )
         self.MOTION = DotDict(
             {
                 "COUNT": 0,
@@ -46,6 +50,12 @@ class CameraSecurity:
 
         # Set up the input connector to check for when the motion sensor is tipped off
         GPIO.setup(self.MOTION.SENSOR, GPIO.IN)
+
+        # Run the camera and motion detection
+        self._run()
+
+    def main(self):
+        asyncio.run(self._run())
 
     def _append_motion(self):
         #  Set detected to true
@@ -82,26 +92,55 @@ class CameraSecurity:
             # this ensures a clean exit
             GPIO.cleanup()
 
+    def _end_motion(self):
+        # Check if we are 15 seconds ahead of our motion's current
+        delta = datetime.now() - self.MOTION.CURRENT
+        if self.MOTION.DETECTED == True and delta > self.MOTION_END_TIME_LAPSE:
+            # Set motion detected to false
+            self.MOTION.DETECTED = False
+
+    def _kill_camera(self):
+        if self.camera:
+            self.camera.close()
+            self.camera = None
+
+    async def _record_motion(self):
+        try:
+            while True:
+                # If sensor is tripped
+                # Even if killing the camera takes a second or two to wrap up, we will still have recursed and ended up
+                # with motion and another video being created
+                if self.MOTION.DETECTED:
+                    if not self.camera:
+                        await self._start_camera()
+                    self.camera.wait_recording(0)
+                else:
+                    if self.camera:
+                        self.camera.stop_recording()
+                        self.CAMERA.STOPPED = True
+                        break
+
+                await asyncio.sleep(0)
+        except KeyboardInterrupt:
+            print(f"Manual exit.")
+        finally:
+            self._kill_camera()
+            # Recursively call it again
+            await self._record_motion()
+
+    async def _run(self):
+        motion_task = asyncio.create_task(self._detect_motion())
+        recording_task = asyncio.create_task(self._record_motion())
+
+        await asyncio.wait([motion_task, recording_task])
+
     async def _start_camera(self):
         self.camera = picamera.PiCamera()
         self.camera.resolution = "HD"
         # Warm up camera
         await asyncio.sleep(1)
 
-    def _end_motion(self):
-        # Check if we are 15 seconds ahead of our motion's current
-        delta = datetime.now() - self.MOTION.CURRENT
-        self.MOTION.DETECTED = (
-            False
-            if self.MOTION.DETECTED == True and delta > self.MOTION_END_TIME_LAPSE
-            else None
-        )
-
-        # Add an async function that kicks off a function that creates a directory, based on the current data
-        # and moves all the video footage into it
-        # NOTE: https://stackoverflow.com/questions/8858008/how-to-move-a-file-in-python
-        # shutil.move() will copy and remove the original if you move the files to a different drive,
-        # and I bet a USB would fall under this category
+        self.camera.start_recording(f"motion_{self.MOTION.COUNT}.h264")
 
 
 class DotDict(dict):
