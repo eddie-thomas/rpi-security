@@ -52,10 +52,7 @@ class CameraSecurity:
         GPIO.setup(self.MOTION.SENSOR, GPIO.IN)
 
         # Run the camera and motion detection
-        self._run()
-
-    def main(self):
-        asyncio.run(self._run())
+        self._main()
 
     def _append_motion(self):
         #  Set detected to true
@@ -103,6 +100,9 @@ class CameraSecurity:
         if self.camera:
             self.camera.close()
             self.camera = None
+
+    def _main(self):
+        asyncio.run(self._run())
 
     async def _record_motion(self):
         try:
