@@ -30,8 +30,7 @@ class CameraSecurity:
         GPIO.setmode(GPIO.BCM)
 
         # Camera set-up
-        self.camera = picamera.PiCamera()
-        self.camera.resolution = "HD"
+        self.camera = None
 
         self.MOTION = DotDict(
             {
@@ -84,7 +83,10 @@ class CameraSecurity:
             GPIO.cleanup()
 
     async def _start_camera(self):
-        pass
+        self.camera = picamera.PiCamera()
+        self.camera.resolution = "HD"
+        # Warm up camera
+        await asyncio.sleep(1)
 
     def _end_motion(self):
         # Check if we are 15 seconds ahead of our motion's current
