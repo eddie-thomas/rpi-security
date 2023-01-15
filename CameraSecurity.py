@@ -131,7 +131,7 @@ class CameraSecurity:
                         print("no motion - yes camera")
                         self.camera.stop_recording()
                         self.CAMERA.STOPPED = True
-                        asyncio.create_task()
+                        asyncio.create_task(self._write_motion_to_file())
                         break
                     print("no motion - no camera")
 
