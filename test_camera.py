@@ -18,7 +18,7 @@ def record_when_motion_detected():
     try:
         length = 0
         while True:
-            camera.wait_recording(1)
+            camera.wait_recording(10)
             if motion_detected(length):
                 camera.wait_recording(1)
                 print(f"\nwaited for {length} seconds")
