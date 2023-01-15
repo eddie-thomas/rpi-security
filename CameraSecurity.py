@@ -1,4 +1,5 @@
 import asyncio
+import picamera
 import RPi.GPIO as GPIO
 
 from datetime import datetime, timedelta
@@ -27,6 +28,10 @@ class CameraSecurity:
         """
         # Set the mode for GPIO pins
         GPIO.setmode(GPIO.BCM)
+
+        # Camera set-up
+        self.camera = picamera.PiCamera()
+        self.camera.resolution = "HD"
 
         self.MOTION = DotDict(
             {
@@ -77,6 +82,9 @@ class CameraSecurity:
         finally:
             # this ensures a clean exit
             GPIO.cleanup()
+
+    async def _start_camera(self):
+        pass
 
     def _end_motion(self):
         # Check if we are 15 seconds ahead of our motion's current
