@@ -38,6 +38,8 @@ class CameraSecurity:
                 "STOPPED": True,
             }
         )
+        self.logger = True
+        self.manual_kill = False
         self.MOTION = DotDict(
             {
                 "COUNT": 0,
@@ -69,10 +71,10 @@ class CameraSecurity:
         await asyncio.sleep(1)
 
         try:
-            while True:
+            while not self.manual_kill:
                 # If sensor is tripped
                 if GPIO.input(self.MOTION.SENSOR):
-                    print("motion detected")
+                    self.logger and print("motion detected")
                     # If we haven't been tripped and this is a new motion
                     if self.MOTION.DETECTED == False:
                         # Append new motion
@@ -82,24 +84,29 @@ class CameraSecurity:
                         self.MOTION.CURRENT = datetime.now()
 
                 else:
-                    print("no motion detected")
+                    self.logger and print("no motion detected")
                     if self.MOTION.DETECTED:
                         # Now always check if we can end a motion when we are not triggering
                         self._kill_motion()
 
                 await asyncio.sleep(1)
         except KeyboardInterrupt:
-            print(f"Manual exit.")
+            self.logger and print(f"Manual exit.")
+            self.manual_kill = True
         except BaseException as e:
-            print(e)
-            raise e
+            self.logger and print(e)
         finally:
-            print("GPIO cleanup")
+            self.logger and print("GPIO cleanup")
             # this ensures a clean exit
             GPIO.cleanup()
 
     def _kill_camera(self):
         if self.camera:
+            self.camera.stop_recording()
+            self.CAMERA.STOPPED = True
+            # Add the task of writing video file to an `.mp4` file
+            asyncio.create_task(self._write_motion_to_file())
+
             self.camera.close()
             self.camera = None
 
@@ -107,7 +114,7 @@ class CameraSecurity:
         # Check if we are 15 seconds ahead of our motion's current
         delta = datetime.now() - self.MOTION.CURRENT
         if self.MOTION.DETECTED == True and delta > self.MOTION_END_TIME_LAPSE:
-            print("kill motion")
+            self.logger and print("kill motion")
             # Set motion detected to false
             self.MOTION.DETECTED = False
 
@@ -116,34 +123,34 @@ class CameraSecurity:
 
     async def _record_motion(self):
         try:
-            while True:
+            while not self.manual_kill:
                 # If sensor is tripped
                 # Even if killing the camera takes a second or two to wrap up, we will still have recursed and ended up
                 # with motion and another video being created
                 if self.MOTION.DETECTED:
                     if not self.camera:
-                        print("create camera")
+                        self.logger and print("create camera")
                         await self._start_camera()
-                    print("camera active - motion")
+                    self.logger and print("camera active - motion")
                     self.camera.wait_recording(1)
                 else:
                     if self.camera:
-                        print("no motion - yes camera")
-                        self.camera.stop_recording()
-                        self.CAMERA.STOPPED = True
-                        # Add the task of writing video file to an `.mp4` file
-                        asyncio.create_task(self._write_motion_to_file())
+                        self.logger and print("no motion - yes camera")
+
                         break
-                    print("no motion - no camera")
+                    self.logger and print("no motion - no camera")
 
                 await asyncio.sleep(1)
+
         except KeyboardInterrupt:
-            print(f"Manual exit.")
+            self.logger and print(f"Manual exit.")
+            self.manual_kill = True
         finally:
-            print("Camera killed")
+            self.logger and print("Camera killed")
             self._kill_camera()
-            # Recursively call it again
-            await self._record_motion()
+
+        # Recursively call it again
+        not self.manual_kill and await self._record_motion()
 
     async def _run(self):
         motion_task = asyncio.create_task(self._detect_motion())
@@ -158,9 +165,10 @@ class CameraSecurity:
         await asyncio.sleep(1)
 
         self.camera.start_recording(f"motion_{self.MOTION.COUNT}.h264")
+        self.CAMERA.STOPPED = False
 
     async def _write_motion_to_file(self):
-        print("starting to write h264 file to mp4")
+        self.logger and print("starting to write h264 file to mp4")
         Popen(["./scripts/parse.sh"])
 
 
