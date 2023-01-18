@@ -16,8 +16,11 @@ do
     # Make copies of the file with the appropriate extension
     fileNameWithoutExtension="${file%.*}"
     # No backslash needed to continue after the control operator (&&)
-    ffmpeg -r 30 -i $file -y "./video/$fileNameWithoutExtension.mp4" &&
-      rm -f "./$file"
+    ffmpeg -r 30 -i $file -y "$fileNameWithoutExtension.mp4" && \
+      rm -f "./$file" && \
+      mkdir -p ./video/ && \
+      mv "$fileNameWithoutExtension.mp4" "./video/$fileNameWithoutExtension.mp4" && \
+      echo -e "\nSuccessfuly completed file configuration and move..."
 done
 
 # ================================
