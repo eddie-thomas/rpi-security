@@ -161,8 +161,7 @@ class CameraSecurity:
 
     async def _write_motion_to_file(self):
         print("starting to write h264 file to mp4")
-        # Change to `parse.sh` and then put pictures in the appropriate directory
-        Popen(["./scripts/test.sh"])
+        Popen(["./scripts/parse.sh"])
 
 
 class DotDict(dict):
