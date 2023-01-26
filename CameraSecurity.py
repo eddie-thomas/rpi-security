@@ -11,7 +11,8 @@ class CameraSecurity:
     """Security system built with a DORHEA Camera Module w/ night-vision compatibility, and an HC-SR501 PIR Sensor module
     for motion detection.
 
-    Notes: Project meant for development with async behavior in Python, and to see if I can get Google API access.
+    NOTE:
+        - Project meant for development with async behavior in Python, and to see if I can get Google API access.
     """
 
     def __init__(self, motion_sensor_pin_number):
@@ -20,13 +21,9 @@ class CameraSecurity:
         Args:
             motion_sensor_pin_number (int): Meant to be the RPi.GPIO.BCM pin number.
 
-        TODO:
-        - Set up camera
-        - Set up motion sensor to start up and continuously set whether motion has happened
-        - Set up camera to record when motion detected and continue recording for 15 seconds
-            after the motion has stopped. Read up on what `wait_recording()` can actually do
-        - Get shell script to instantiate this object and start up motion sensor to record when
-            motion is active
+        NOTE:
+            - This function invokes the `self._main()` method which calls the two async
+            routines together.
         """
         # Set the mode for GPIO pins
         GPIO.setmode(GPIO.BCM)
@@ -59,6 +56,7 @@ class CameraSecurity:
         self._main()
 
     def _append_motion(self):
+        """Method to start a new motion. This only happens if there is no currently active motion."""
         #  Set detected to true
         self.MOTION.DETECTED = True
         # Set the start date of the trip
@@ -67,6 +65,14 @@ class CameraSecurity:
         self.MOTION.COUNT += 1
 
     async def _detect_motion(self):
+        """Asynchronous method to constantly run every second and check if the motion sensor has been triggered
+
+        NOTE:
+            - We expect this method to, independently, check for motion activity and when found, it will create
+            append a motion. If a motion has already been created, and the motion sensor triggers, the active motion's
+            `CURRENT` property will be reset with the current `datetime`. This way, we keep track of a motion's
+            last known time when motion was actively triggering the sensor.
+        """
         # Give the sensor an extra second for start up
         await asyncio.sleep(1)
 
@@ -101,6 +107,12 @@ class CameraSecurity:
             GPIO.cleanup()
 
     def _kill_camera(self):
+        """Method to kill the camera
+
+        NOTE:
+            - We can kill the camera for multiple reasons, it will happen in the `finally` clause of the
+            `_record_motion` method.
+        """
         if self.camera:
             self.camera.stop_recording()
             self.CAMERA.STOPPED = True
@@ -111,6 +123,12 @@ class CameraSecurity:
             self.camera = None
 
     def _kill_motion(self):
+        """Method to kill motion.
+
+        NOTE:
+            - We kill the active motion after 15 seconds. See the `MOTION_END_TIME_LAPSE` class constant
+            to see where this delta is assigned
+        """
         # Check if we are 15 seconds ahead of our motion's current
         delta = datetime.now() - self.MOTION.CURRENT
         if self.MOTION.DETECTED == True and delta > self.MOTION_END_TIME_LAPSE:
@@ -119,9 +137,20 @@ class CameraSecurity:
             self.MOTION.DETECTED = False
 
     def _main(self):
+        """Main method that kicks off the asynchronous methods that run the loops."""
         asyncio.run(self._run())
 
     async def _record_motion(self):
+        """Record motion. Kind of a bad name, but this method will asynchronously run every second to
+        determine if a motion has been created. If a motion is active, and there is not active recording being done
+        start the camera and record. If we are recording, it is because motion has been detected and a recording
+        was started to capture it. If the motion is no longer detecting (meaning it hasn't been triggered for 15+ seconds)
+        then we can kill the camera.
+
+        NOTE:
+            - We recursively will call this method. So each time we invoke this method, it's only to capture one motion,
+            start recording, and keep recording until the motion has been stagnate for 15+ seconds. Then we recurse.
+        """
         try:
             while not self.manual_kill:
                 # If sensor is tripped
@@ -153,12 +182,19 @@ class CameraSecurity:
         not self.manual_kill and await self._record_motion()
 
     async def _run(self):
+        """Asynchronous method that adds the two co-routines to the main event loop"""
         motion_task = asyncio.create_task(self._detect_motion())
         recording_task = asyncio.create_task(self._record_motion())
 
         await asyncio.wait([motion_task, recording_task])
 
     async def _start_camera(self):
+        """Method to start a recording
+
+        NOTE:
+            - To save energy, I kill the camera so if the motion sensor is inactive for multiple
+            hour(s), we do not keep the camera rolling.
+        """
         self.camera = picamera.PiCamera()
         self.camera.resolution = "HD"
         # Warm up camera
@@ -168,6 +204,18 @@ class CameraSecurity:
         self.CAMERA.STOPPED = False
 
     async def _write_motion_to_file(self):
+        """Method that kicks off the writing process
+
+        NOTE:
+            - This sub-process is a CPU-heavy process,
+            - We expect that many motions within a short time period will, hopefully,
+            not bottleneck the CPU's memory, but this will need to be done in a trial
+            by error
+            - Because of the extra computation needed after a recording has finished,
+            post-processing if you will, it would probably be best to kill recordings
+            after a specific max length. So our CPU won't be overloaded with a process
+            that could take minutes to hours to run.
+        """
         self.logger and print("starting to write h264 file to mp4")
         Popen(["./scripts/parse.sh"])
 

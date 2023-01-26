@@ -7,8 +7,6 @@ set -e
 
 script_start=$(date +%s)
 
-script_directory=$(dirname "$0")
-
 # ================================
 myFileNames=$(ls *.h264)
 for file in $myFileNames
