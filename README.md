@@ -75,3 +75,8 @@ v.1.0.1
 ## Authors
 
 - **Edward Thomas** - Check out my [portfolio](https://eddie-thomas.github.io/portfolio/)!
+
+## License
+
+- Copyright © 2018 - 2023 by Edward K Thomas Jr
+- GNU GENERAL PUBLIC LICENSE https://www.gnu.org/licenses/gpl-3.0.en.html
